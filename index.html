@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тренажёр «1С:Профессионал» — 1С:ERP 2.5</title>
+<style>
+:root{
+  --bg:#0f1220;--panel:#1a1f35;--panel2:#242a45;--line:#2e3556;
+  --text:#e8ecff;--muted:#9aa3c7;--yellow:#ffd84d;--green:#3ecf7a;
+  --red:#ff6161;--blue:#6aa7ff;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.5}
+.container{max-width:980px;margin:0 auto;padding:20px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+header .logo{font-size:28px}
+header h1{font-size:22px;margin:0}
+header small{color:var(--muted);display:block;font-size:13px}
+.screen{display:none}
+.screen.active{display:block}
+.sec{font-size:18px;margin:22px 0 12px;color:var(--yellow)}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:14px;cursor:pointer;display:flex;gap:12px;align-items:center;
+  transition:.15s}
+.card:hover{border-color:var(--yellow);transform:translateY(-1px)}
+.card .num{font-size:26px;font-weight:800;color:var(--yellow);min-width:40px}
+.card b{display:block;font-size:15px}
+.card span{color:var(--muted);font-size:12.5px;display:block;margin-top:2px}
+.exam-card{background:linear-gradient(135deg,#1e2545,#2a3260)}
+.btn{background:var(--yellow);color:#1a1a1a;border:none;border-radius:10px;
+  padding:10px 18px;font-weight:700;cursor:pointer;font-size:14px}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn.ghost:hover{color:var(--text);border-color:var(--yellow)}
+.hidden{display:none!important}
+.pbar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;margin:10px 0 18px}
+.pbar div{height:100%;background:linear-gradient(90deg,var(--yellow),#ffb84d);transition:.3s}
+.qtext{font-size:17px;font-weight:600;margin:10px 0 18px;line-height:1.45}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;text-align:left;color:var(--text);cursor:pointer;
+  display:flex;gap:10px;align-items:flex-start;font-size:14.5px;transition:.15s}
+.opt:hover{border-color:var(--yellow)}
+.opt.sel{border-color:var(--yellow);background:#2a3260}
+.opt.correct{border-color:var(--green);background:rgba(62,207,122,.12)}
+.opt.wrong{border-color:var(--red);background:rgba(255,97,97,.12)}
+.opt .n{background:var(--panel2);color:var(--yellow);border-radius:6px;
+  padding:2px 8px;font-weight:700;font-size:12px;min-width:22px;text-align:center}
+.opt:disabled{cursor:default}
+.fb{margin-top:16px;padding:14px;border-radius:12px;border:1px solid var(--line)}
+.fb.ok{background:rgba(62,207,122,.08);border-color:var(--green)}
+.fb.no{background:rgba(255,97,97,.08);border-color:var(--red)}
+.fb b{display:block;margin-bottom:6px}
+.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.timer{font-family:monospace;font-size:18px;color:var(--yellow);margin-left:auto}
+.verdict{font-size:28px;font-weight:800;margin:14px 0}
+.verdict.pass{color:var(--green)}
+.verdict.fail{color:var(--red)}
+.row{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:12px;margin-bottom:8px;display:flex;gap:12px}
+.row.good{border-left:4px solid var(--green)}
+.row.bad{border-left:4px solid var(--red)}
+.row .ic{font-size:20px;min-width:24px}
+.row small{color:var(--muted);font-size:12.5px;line-height:1.4}
+.hist-item{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;margin-bottom:6px;font-size:13px;display:flex;
+  justify-content:space-between;gap:10px;align-items:center}
+.pill{border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+.pill.pass{background:rgba(62,207,122,.15);color:var(--green)}
+.pill.fail{background:rgba(255,97,97,.15);color:var(--red)}
+.stat-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px}
+.stat-table th,.stat-table td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+.stat-table th{color:var(--muted);font-weight:600}
+.bar{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden;min-width:80px}
+.bar div{height:100%;background:linear-gradient(90deg,var(--green),#7fe3a5)}
+.searchbox{display:flex;gap:10px;margin-bottom:12px}
+.searchbox input{flex:1;background:var(--panel2);border:1px solid var(--line);
+  color:var(--text);border-radius:10px;padding:12px 14px;font-size:14px}
+.searchbox input:focus{outline:none;border-color:var(--yellow)}
+.sresult{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;margin-bottom:8px;cursor:pointer;font-size:13.5px;line-height:1.4}
+.sresult:hover{border-color:var(--yellow)}
+.sresult .tm{color:var(--yellow);font-size:12px;font-weight:700}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);
+  cursor:pointer;user-select:none}
+.toggle input{width:16px;height:16px;accent-color:var(--yellow)}
+.card.stat{cursor:default;flex-direction:column;align-items:flex-start;gap:4px}
+.card.stat:hover{transform:none;border-color:var(--line)}
+.card.stat span{font-size:12px;color:var(--muted)}
+.card.stat b{font-size:22px}
+footer{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:12.5px}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr}
+  header h1{font-size:18px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">🎓</div>
+    <div>
+      <h1>Тренажёр «1С:Профессионал»</h1>
+      <small>1С:ERP Управление предприятием 2.5 · <span id="bank-size">загрузка…</span></small>
+    </div>
+  </header>
+
+  <div id="screen-home" class="screen active"></div>
+
+  <div id="screen-quiz" class="screen">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div id="qcount" style="font-weight:600"></div>
+      <div class="timer" id="timer">30:00</div>
+    </div>
+    <div class="pbar"><div id="pbar" style="width:0%"></div></div>
+    <div class="qtext" id="qtext"></div>
+    <div class="opts" id="opts"></div>
+    <div class="fb hidden" id="fb">
+      <div id="fb-t"></div>
+      <div id="fb-c" style="margin-top:8px"></div>
+    </div>
+    <div class="actions">
+      <button class="btn hidden" id="btn-check" onclick="check()">Проверить ответ</button>
+      <button class="btn hidden" id="btn-next" onclick="next()">Следующий вопрос →</button>
+      <button class="btn ghost" onclick="exitQuiz()">← Выйти</button>
+    </div>
+  </div>
+
+  <div id="screen-result" class="screen">
+    <h2>Результат</h2>
+    <div id="r-score" style="font-size:32px;font-weight:800;color:var(--yellow)"></div>
+    <div id="r-verdict" class="verdict"></div>
+    <div id="r-sub" style="color:var(--muted);margin-bottom:18px"></div>
+    <div id="r-rows"></div>
+    <div class="actions">
+      <button class="btn" id="r-retry">Пройти ещё раз</button>
+      <button class="btn ghost" onclick="goHome()">На главную</button>
+    </div>
+  </div>
+
+  <footer>
+    По изданию «Комплект вопросов сертификационного экзамена „1С:Профессионал"…
+    „1С:ERP Управление предприятием" (ред. 2.5) с примерами решений» (М.: 1С-Паблишинг, 2022).
+  </footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+var QB=[], TOPICS=[], EXAM1=null, EXAM2=null, session=null, timerInt=null;
+
+var TOPIC_NAMES={
+  '1':'Общие положения, НСИ','2':'Планирование','3':'Бюджетирование',
+  '4':'Работа с заказами','5':'Закупки','6':'Складское хозяйство',
+  '7':'Продажи','8':'Казначейство','9':'Ведение взаиморасчётов',
+  '10':'Нормирование','11':'Управление производством','12':'Производство',
+  '13':'Оперативный учёт','14':'Регламентированный учёт'
+};
+
+var $=function(id){return document.getElementById(id);};
+function shuffle(a){var x=a.slice();for(var i=x.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=x[i];x[i]=x[j];x[j]=t;}return x;}
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});$(id).classList.add('active');window.scrollTo(0,0);}
+
+var LS={
+  get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},
+  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
+var STATS=LS.get('erp_stats',{});
+var MISSED=LS.get('erp_missed',[]);
+var HISTORY=LS.get('erp_history',[]);
+var SETTINGS=LS.get('erp_settings',{shuffle:true});
+function saveAll(){LS.set('erp_stats',STATS);LS.set('erp_missed',MISSED);LS.set('erp_history',HISTORY);LS.set('erp_settings',SETTINGS);}
+
+function poolOf(t){return QB.filter(function(q){return q.t===t;});}
+function T(t){return TOPICS.find(function(x){return x.id===t;});}
+function missedQuestions(){var set={};MISSED.forEach(function(k){set[k]=true;});return QB.filter(function(q){return set[q.k];});}
+function topicStats(t){var pool=poolOf(t),learned=0,attempts=0,right=0;
+  pool.forEach(function(q){var s=STATS[q.k];if(s){attempts+=s.t;right+=s.r;if(s.r>0)learned++;}});
+  return{learned:learned,attempts:attempts,right:right,total:pool.length};}
+function recordAnswer(q,ok){
+  if(!q.k)return;
+  var s=STATS[q.k]||(STATS[q.k]={t:0,r:0,last:null});
+  s.t++;if(ok)s.r++;s.last=ok;
+  var i=MISSED.indexOf(q.k);
+  if(ok){if(i>-1)MISSED.splice(i,1);}else{if(i===-1)MISSED.push(q.k);}
+  saveAll();
+}
+
+function loadData(){
+  if(typeof erpQuestions==='undefined'||!Array.isArray(erpQuestions)){
+    document.body.innerHTML='<p style="padding:40px;text-align:center;color:#ff6161">Ошибка: не загружен data.js. Положите data.js рядом с index.html.</p>';
+    return false;
+  }
+  var topicMap={}, exam1=[], exam2=[];
+  QB=[];
+  erpQuestions.forEach(function(q){
+    if(!q||!q.id)return;
+    var opts=(q.options||[]).map(function(o){return o.text;});
+    var ai=-1;
+    if(q.correct&&q.correct.length){ai=q.correct[0]-1;}
+    else{var c=(q.options||[]).find(function(o){return o.is_correct;});if(c)ai=c.number-1;}
+
+    if(q.id.indexOf('.')!==-1){
+      if(ai<0)return;
+      var tid=q.id.split('.')[0];
+      if(!topicMap[tid]){
+        topicMap[tid]={id:tid,title:TOPIC_NAMES[tid]||('Тема '+tid),name:TOPIC_NAMES[tid]||('Тема '+tid)};
+      }
+      QB.push({t:tid,q:q.question,o:opts,a:ai,c:'',rawId:q.id});
+      return;
+    }
+    var item={t:'exam',q:q.question,o:opts,a:ai>=0?ai:0,c:'',rawId:q.id,k:null};
+    var sub=q.subsection||'';
+    if(sub.indexOf('Задание 1')!==-1)exam1.push(item);
+    else if(sub.indexOf('Задание 2')!==-1)exam2.push(item);
+  });
+  TOPICS=Object.keys(topicMap).map(function(k){return topicMap[k];}).sort(function(a,b){return(+a.id)-(+b.id);});
+  var n={};
+  QB.forEach(function(q){var i=n[q.t]||0;n[q.t]=i+1;q.k=q.t+'.'+i;});
+  EXAM1={name:'Примеры экзаменационных заданий (Задание 1)',desc:exam1.length+' вопросов',questions:exam1};
+  EXAM2={name:'Примеры экзаменационных заданий (Задание 2)',desc:exam2.length+' вопросов',questions:exam2};
+  return true;
+}
+
+function startQuiz(qs,title,timed){
+  if(!qs||!qs.length){alert('Нет вопросов.');return;}
+  session={qs:qs,title:title,timed:timed,idx:0,score:0,sel:null,checked:false,results:[],order:[],opts:[],correctPos:-1,timeLeft:timed?30*60:0};
+  show('screen-quiz');renderQ();
+  if(timerInt)clearInterval(timerInt);
+  if(timed){updateTimer();timerInt=setInterval(function(){session.timeLeft--;updateTimer();if(session.timeLeft<=0){clearInterval(timerInt);finish();}},1000);}
+  else{$('timer').textContent='';}
+}
+function updateTimer(){var t=session.timeLeft,m=Math.floor(t/60),s=t%60;$('timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+function startSim(){
+  var qs=[];
+  TOPICS.forEach(function(t){var pool=poolOf(t.id);if(pool.length)qs.push(pool[Math.floor(Math.random()*pool.length)]);});
+  while(qs.length<14&&QB.length){var extra=QB[Math.floor(Math.random()*QB.length)];if(qs.indexOf(extra)===-1)qs.push(extra);else break;}
+  startQuiz(shuffle(qs).slice(0,14),'Случайный билет (14 вопросов)',true);
+}
+function exitQuiz(){if(confirm('Выйти из теста? Прогресс текущего теста будет потерян.')){if(timerInt)clearInterval(timerInt);goHome();}}
+function goHome(){show('screen-home');buildHome();}
+
+function renderQ(){
+  var s=session,q=s.qs[s.idx];s.sel=null;s.checked=false;
+  var tName=(T(q.t)&&T(q.t).name)||(TOPIC_NAMES[q.t]||q.t);
+  $('qcount').textContent='Вопрос '+(s.idx+1)+' из '+s.qs.length+(q.t!=='exam'?(' · Тема '+q.t+'. '+tName):'');
+  $('pbar').style.width=(s.idx/s.qs.length*100)+'%';
+  $('qtext').textContent=q.q;
+  var idxs=q.o.map(function(_,i){return i;});
+  if(SETTINGS.shuffle)idxs=shuffle(idxs);
+  s.order=idxs;s.opts=idxs.map(function(i){return q.o[i];});s.correctPos=idxs.indexOf(q.a);
+  var box=$('opts');box.innerHTML='';
+  s.opts.forEach(function(txt,i){
+    var b=document.createElement('button');b.className='opt';b.type='button';
+    b.innerHTML='<span class="n">'+(i+1)+'</span><span></span>';
+    b.querySelectorAll('span')[1].textContent=txt;
+    b.onclick=function(){select(i);};box.appendChild(b);
+  });
+  $('btn-check').classList.remove('hidden');$('btn-next').classList.add('hidden');
+  var fb=$('fb');fb.classList.add('hidden');fb.className='fb hidden';
+}
+function select(i){if(session.checked)return;session.sel=i;Array.prototype.forEach.call($('opts').children,function(b,j){b.classList.toggle('sel',j===i);});}
+function check(){
+  var s=session,q=s.qs[s.idx];if(s.sel===null||s.checked)return;
+  s.checked=true;var ok=s.sel===s.correctPos;if(ok)s.score++;
+  var selText=s.opts[s.sel],correctText=s.opts[s.correctPos];
+  s.results.push({q:q,ok:ok,selText:selText,correctText:correctText});recordAnswer(q,ok);
+  Array.prototype.forEach.call($('opts').children,function(b,j){b.disabled=true;if(j===s.correctPos)b.classList.add('correct');else if(j===s.sel)b.classList.add('wrong');b.classList.remove('sel');});
+  var fb=$('fb');fb.classList.remove('hidden');fb.className='fb '+(ok?'ok':'no');
+  $('fb-t').textContent=ok?'✔ Верно!':'✘ Неверно';
+  var html=ok?'':'<div style="margin-bottom:8px"><b>Правильный ответ:</b> '+escapeHtml(correctText)+'</div>';
+  html+=q.c?('<b>Комментарий:</b> '+q.c):'<i>Пояснение к этому вопросу не добавлено.</i>';
+  $('fb-c').innerHTML=html;
+  $('btn-check').classList.add('hidden');
+  $('btn-next').textContent=(s.idx+1<s.qs.length)?'Следующий вопрос →':'Показать результат';
+  $('btn-next').classList.remove('hidden');
+}
+function next(){var s=session;if(s.idx+1<s.qs.length){s.idx++;renderQ();}else finish();}
+function finish(){
+  if(timerInt)clearInterval(timerInt);var s=session;
+  for(var i=s.idx+(s.checked?1:0);i<s.qs.length;i++){var q=s.qs[i];s.results.push({q:q,ok:false,selText:null,correctText:q.o[q.a]});recordAnswer(q,false);}
+  HISTORY.unshift({d:new Date().toLocaleString('ru-RU'),title:s.title,score:s.score,total:s.qs.length});
+  if(HISTORY.length>30)HISTORY.length=30;saveAll();
+  show('screen-result');var n=s.qs.length;$('r-score').textContent=s.score+' / '+n;
+  var v=$('r-verdict');
+  if(n===14){v.textContent=s.score>=12?'СДАНО ✔':'НЕ СДАНО ✘';v.className='verdict '+(s.score>=12?'pass':'fail');
+    $('r-sub').textContent=s.score>=12?'Поздравляем! 12 и более правильных ответов — как на реальном экзамене «1С:Профессионал».':'Для успешной сдачи нужно минимум 12 правильных ответов из 14.';}
+  else{var p=s.score/n>=0.85;v.textContent=p?'Отличный результат!':'Продолжайте тренироваться';v.className='verdict '+(p?'pass':'fail');
+    $('r-sub').textContent='Ориентир для экзамена — не менее 12 правильных из 14 (≈ 85%).';}
+  var rows=$('r-rows');rows.innerHTML='';
+  s.results.forEach(function(r,i){
+    var d=document.createElement('div');d.className='row '+(r.ok?'good':'bad');
+    var tName=(T(r.q.t)&&T(r.q.t).name)||r.q.t;
+    var detail=r.selText===null?'Нет ответа':(r.ok?'Верный ответ':('Ваш ответ: '+r.selText+' → правильно: '+r.correctText));
+    d.innerHTML='<div class="ic">'+(r.ok?'✔':'✘')+'</div><div><b>Вопрос '+(i+1)+'.</b> '+escapeHtml(r.q.q)+'<br><small>Тема '+r.q.t+'. '+escapeHtml(String(tName))+' · '+escapeHtml(detail)+'</small></div>';
+    rows.appendChild(d);
+  });
+  $('r-retry').onclick=function(){startQuiz(shuffle(s.qs.map(function(q){return Object.assign({},q);})),s.title,s.timed);};
+  window.scrollTo(0,0);
+}
+function startMissed(){
+  var qs=missedQuestions();
+  if(!qs.length){alert('Ошибок пока нет. Отвечайте на вопросы — неверно решённые появятся здесь.');return;}
+  startQuiz(shuffle(qs.map(function(q){return Object.assign({},q);})),'Работа над ошибками ('+qs.length+')',false);
+}
+
+var _searchFound=[];
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function doSearch(){
+  var q=$('search-input').value.trim().toLowerCase(),res=$('search-results');
+  if(!q){res.innerHTML='';return;}
+  _searchFound=QB.filter(function(it){return (it.q+' '+it.o.join(' ')).toLowerCase().indexOf(q)!==-1;});
+  if(!_searchFound.length){res.innerHTML='<div class="sresult" style="cursor:default">Ничего не найдено.</div>';return;}
+  var html='<div style="margin:10px 0"><button class="btn" onclick="trainSearch()">Тренировать найденные ('+_searchFound.length+')</button></div>';
+  _searchFound.slice(0,50).forEach(function(it){
+    var tn=(T(it.t)&&T(it.t).name)||it.t;
+    html+='<div class="sresult" onclick="trainOne(\''+it.k+'\')"><span class="tm">Тема '+it.t+'. '+escapeHtml(tn)+'</span><br>'+escapeHtml(it.q)+'</div>';
+  });
+  if(_searchFound.length>50)html+='<div class="sresult" style="cursor:default">…и ещё '+(_searchFound.length-50)+'. Уточните запрос.</div>';
+  res.innerHTML=html;
+}
+function trainSearch(){if(!_searchFound.length)return;startQuiz(shuffle(_searchFound.map(function(q){return Object.assign({},q);})),'Поиск ('+_searchFound.length+')',false);}
+function trainOne(k){var it=QB.find(function(q){return q.k===k;});if(it)startQuiz([Object.assign({},it)],'Вопрос · Тема '+it.t,false);}
+
+function renderOverall(){
+  var attempts=0,right=0,learned=0;
+  Object.keys(STATS).forEach(function(k){var s=STATS[k];attempts+=s.t;right+=s.r;if(s.r>0)learned++;});
+  var acc=attempts?Math.round(right/attempts*100):0;
+  $('stats-overall').innerHTML='<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(160px,1fr));margin-bottom:16px">'+
+    '<div class="card stat"><span>Всего вопросов</span><b>'+QB.length+'</b></div>'+
+    '<div class="card stat"><span>Изучено (≥1 верно)</span><b>'+learned+'</b></div>'+
+    '<div class="card stat"><span>Дано ответов</span><b>'+attempts+'</b></div>'+
+    '<div class="card stat"><span>Правильных</span><b>'+acc+'%</b></div>'+
+    '<div class="card stat"><span>Ошибок к повтору</span><b>'+MISSED.length+'</b></div></div>';
+}
+function renderTopicStats(){
+  var rows='';
+  TOPICS.forEach(function(t){var st=topicStats(t.id),pct=st.total?Math.round(st.learned/st.total*100):0;
+    rows+='<tr><td>'+t.id+'. '+escapeHtml(t.name)+'</td><td>'+st.total+'</td><td>'+st.learned+'</td><td>'+st.attempts+'</td><td>'+(st.attempts?Math.round(st.right/st.attempts*100)+'%':'—')+'</td><td><div class="bar"><div style="width:'+pct+'%"></div></div></td></tr>';});
+  $('stats-topics').innerHTML='<table class="stat-table"><thead><tr><th>Тема</th><th>Вопросов</th><th>Изучено</th><th>Попыток</th><th>Верно</th><th>Прогресс</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function renderHistory(){
+  var h=HISTORY.slice(0,10);
+  if(!h.length){$('stats-history').innerHTML='<div style="color:var(--muted);font-size:13px">Пока нет пройденных тестов.</div>';return;}
+  $('stats-history').innerHTML=h.map(function(r){var pass=r.total===14?r.score>=12:(r.score/r.total>=0.85);
+    return '<div class="hist-item"><span>'+escapeHtml(r.title)+'</span><span style="color:var(--muted)">'+escapeHtml(r.d)+'</span><span class="pill '+(pass?'pass':'fail')+'">'+r.score+'/'+r.total+'</span></div>';}).join('');
+}
+function resetStats(){if(!confirm('Сбросить всю статистику и историю ошибок?'))return;STATS={};MISSED=[];HISTORY=[];saveAll();buildHome();}
+
+function buildHome(){
+  $('screen-home').innerHTML=
+    '<h2 class="sec">📋 Экзаменационные задания</h2><div class="grid" id="exams-grid"></div>'+
+    '<h2 class="sec">🎯 Симулятор и спецрежимы</h2><div class="grid">'+
+    '<div class="card exam-card" onclick="startSim()"><div class="num">⏱</div><div><b>Случайный билет: 14 вопросов</b><span>По одному из тем · 30 минут · порог 12/14</span></div></div>'+
+    '<div class="card" onclick="startMissed()"><div class="num">🔁</div><div><b>Только ошибки</b><span id="missed-count"></span></div></div></div>'+
+    '<div style="margin:14px 0"><label class="toggle"><input type="checkbox" id="shuffle-toggle">Перемешивать варианты ответов</label></div>'+
+    '<h2 class="sec">🔍 Поиск по вопросам</h2><div class="searchbox"><input id="search-input" type="text" placeholder="Ключевое слово, например: серия, бюджет, амортизация"><button class="btn" id="search-btn">Найти</button></div><div id="search-results"></div>'+
+    '<h2 class="sec">📚 Тренировка по темам</h2><div class="grid" id="topics-grid"></div>'+
+    '<h2 class="sec">📊 Статистика</h2><div id="stats-overall"></div><div id="stats-topics"></div>'+
+    '<h3 style="font-size:14px;color:var(--muted);margin:18px 0 8px">Последние результаты</h3><div id="stats-history"></div>'+
+    '<div style="margin-top:16px"><button class="btn ghost" onclick="resetStats()">🗑 Сбросить статистику</button></div>';
+
+  var eg=$('exams-grid');eg.innerHTML='';
+  [EXAM1,EXAM2].forEach(function(ex,i){
+    if(!ex||!ex.questions.length)return;
+    var d=document.createElement('div');d.className='card exam-card';
+    d.innerHTML='<div class="num">'+(i+1)+'</div><div><b>'+escapeHtml(ex.name)+'</b><span>'+escapeHtml(ex.desc)+'</span></div>';
+    d.onclick=function(){startQuiz(ex.questions.map(function(q){return Object.assign({},q);}),ex.name,false);};
+    eg.appendChild(d);
+  });
+
+  var tg=$('topics-grid');tg.innerHTML='';
+  TOPICS.forEach(function(t){
+    var pool=poolOf(t.id),n=pool.length,st=topicStats(t.id),pct=n?Math.round(st.learned/n*100):0;
+    var d=document.createElement('div');d.className='card';
+    d.innerHTML='<div class="num">'+t.id+'</div><div style="flex:1"><b>'+escapeHtml(t.title)+'</b><span>'+n+' вопрос(ов) · изучено '+st.learned+'/'+n+'</span><div class="bar" style="margin-top:6px"><div style="width:'+pct+'%"></div></div></div>';
+    d.onclick=function(){if(!n){alert('В этой теме нет вопросов.');return;}startQuiz(shuffle(pool.map(function(q){return Object.assign({},q);})),'Тема '+t.id+'. '+t.title,false);};
+    tg.appendChild(d);
+  });
+
+  $('missed-count').textContent=MISSED.length?(MISSED.length+' вопрос(ов) к повтору'):'Ошибок пока нет';
+  var stgl=$('shuffle-toggle');stgl.checked=!!SETTINGS.shuffle;
+  stgl.onchange=function(){SETTINGS.shuffle=stgl.checked;saveAll();};
+  $('search-btn').onclick=doSearch;
+  $('search-input').onkeydown=function(e){if(e.key==='Enter')doSearch();};
+  renderOverall();renderTopicStats();renderHistory();
+  $('bank-size').textContent='В банке: '+QB.length+' вопросов · тем: '+TOPICS.length;
+}
+
+if(loadData()){buildHome();}
+</script>
+</body>
+</html>
