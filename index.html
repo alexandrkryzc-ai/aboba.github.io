@@ -209,7 +209,7 @@ function loadData(){
       if(!topicMap[tid]){
         topicMap[tid]={id:tid,title:TOPIC_NAMES[tid]||('Тема '+tid),name:TOPIC_NAMES[tid]||('Тема '+tid)};
       }
-      QB.push({t:tid,q:q.question,o:opts,a:ai,c:'',rawId:q.id});
+      QB.push({t:tid,q:q.question,o:opts,a:ai,c:(q.explanation||''),rawId:q.id});
       return;
     }
     var item={t:'exam',q:q.question,o:opts,a:ai>=0?ai:0,c:'',rawId:q.id,k:null};
@@ -272,7 +272,7 @@ function check(){
   var fb=$('fb');fb.classList.remove('hidden');fb.className='fb '+(ok?'ok':'no');
   $('fb-t').textContent=ok?'✔ Верно!':'✘ Неверно';
   var html=ok?'':'<div style="margin-bottom:8px"><b>Правильный ответ:</b> '+escapeHtml(correctText)+'</div>';
-  html+=q.c?('<b>Комментарий:</b> '+q.c):'<i>Пояснение к этому вопросу не добавлено.</i>';
+  html+=q.c?('<b>Пояснение:</b> '+q.c):'<i>Пояснение к этому вопросу пока не добавлено.</i>';
   $('fb-c').innerHTML=html;
   $('btn-check').classList.add('hidden');
   $('btn-next').textContent=(s.idx+1<s.qs.length)?'Следующий вопрос →':'Показать результат';
