@@ -38,7 +38,15 @@ var TOPIC_NAMES = {
 
 var $ = function(id){return document.getElementById(id);};
 function shuffle(a){var x=a.slice();for(var i=x.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=x[i];x[i]=x[j];x[j]=t;}return x;}
-function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});$(id).classList.add('active');window.scrollTo(0,0);}
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.remove('active');
+    s.classList.remove('hidden');
+  });
+  var el = $(id);
+  if(el) el.classList.add('active');
+  window.scrollTo(0,0);
+}
 function poolOf(t){return QB.filter(function(q){return q.t===t;});}
 function T(t){return TOPICS.find(function(x){return x.id===t;});}
 function missedQuestions(){var set={};MISSED.forEach(function(k){set[k]=true;});return QB.filter(function(q){return set[q.k];});}
@@ -174,25 +182,84 @@ function next(){
 }
 
 function finish(){
-  clearInterval(timerInt);var s=session;
-  for(var i=s.idx+(s.checked?1:0);i<s.qs.length;i++){var q=s.qs[i];
-    s.results.push({q:q,ok:false,selText:null,correctText:q.o[q.a]});recordAnswer(q,false);}
-  HISTORY.unshift({d:new Date().toLocaleString('ru-RU'),title:s.title,score:s.score,total:s.qs.length});
-  if(HISTORY.length>30)HISTORY.length=30;saveAll();
-  show('screen-result');
-  var n=s.qs.length;$('r-score').textContent=s.score+' / '+n;
-  var v=$('r-verdict');
-  if(n===14){v.textContent=s.score>=12?'СДАНО ✔':'НЕ СДАНО ✘';v.className='verdict '+(s.score>=12?'pass':'fail');
-    $('r-sub').textContent=s.score>=12?'Поздравляем! 12 и более правильных ответов — как на реальном экзамене «1С:Профессионал».':'Для успешной сдачи нужно минимум 12 правильных ответов из 14.';}
-  else{var p=s.score/n>=0.85;v.textContent=p?'Отличный результат!':'Продолжайте тренироваться';v.className='verdict '+(p?'pass':'fail');
-    $('r-sub').textContent='Ориентир для экзамена — не менее 12 правильных из 14 (≈ 85%).';}
-  var rows=$('r-rows');rows.innerHTML='';
-  s.results.forEach(function(r,i){var d=document.createElement('div');d.className='row '+(r.ok?'good':'bad');
-    d.innerHTML='<div class="ic">'+(r.ok?'✔':'✘')+'</div><div><b>Вопрос '+(i+1)+'.</b> '+r.q.q+'<br>'+
-    '<small>Раздел '+r.q.t+'. '+(TOPIC_NAMES[r.q.t]||'')+' · '+(r.selText===null?'Нет ответа':(r.ok?'Верный ответ':'Ваш ответ: '+r.selText+' → правильно: '+r.correctText))+'</small>'+(r.q.c?'<br><small style="color:#c9d1ee">💬 '+r.q.c+'</small>':'')+'</div>';
-    rows.appendChild(d);});
-  $('r-retry').onclick=function(){startQuiz(shuffle(s.qs.map(function(q){return Object.assign({},q);})),s.title,s.timed);};
-  window.scrollTo(0,0);
+  clearInterval(timerInt);
+  var s = session;
+  if(!s){ goHome(); return; }
+
+  // mark remaining unanswered questions as wrong
+  for(var i = s.idx + (s.checked ? 1 : 0); i < s.qs.length; i++){
+    var q = s.qs[i];
+    s.results.push({
+      q: q,
+      ok: false,
+      selText: null,
+      correctText: (q.o && q.a >= 0 && q.a < q.o.length) ? q.o[q.a] : ''
+    });
+    recordAnswer(q, false);
+  }
+
+  HISTORY.unshift({
+    d: new Date().toLocaleString('ru-RU'),
+    title: s.title,
+    score: s.score,
+    total: s.qs.length
+  });
+  if(HISTORY.length > 30) HISTORY.length = 30;
+  saveAll();
+
+  // Force switch to result screen
+  document.querySelectorAll('.screen').forEach(function(el){
+    el.classList.remove('active');
+    el.classList.remove('hidden');
+  });
+  var resultEl = $('screen-result');
+  if(resultEl){
+    resultEl.classList.add('active');
+  } else {
+    goHome();
+    return;
+  }
+
+  var n = s.qs.length;
+  $('r-score').textContent = s.score + ' / ' + n;
+
+  var v = $('r-verdict');
+  if(n === 14){
+    var passed = s.score >= 12;
+    v.textContent = passed ? 'СДАНО ✔' : 'НЕ СДАНО ✘';
+    v.className = 'verdict ' + (passed ? 'pass' : 'fail');
+    $('r-sub').textContent = passed
+      ? 'Поздравляем! 12 и более правильных ответов — как на реальном экзамене «1С:Профессионал».'
+      : 'Для успешной сдачи нужно минимум 12 правильных ответов из 14.';
+  } else {
+    var p = n > 0 && (s.score / n >= 0.85);
+    v.textContent = p ? 'Отличный результат!' : 'Продолжайте тренироваться';
+    v.className = 'verdict ' + (p ? 'pass' : 'fail');
+    $('r-sub').textContent = 'Ориентир для экзамена — не менее 12 правильных из 14 (≈ 85%).';
+  }
+
+  var rows = $('r-rows');
+  rows.innerHTML = '';
+  s.results.forEach(function(r, i){
+    var d = document.createElement('div');
+    d.className = 'row ' + (r.ok ? 'good' : 'bad');
+    var qText = (r.q && r.q.q) ? r.q.q : '';
+    var topicName = (r.q && TOPIC_NAMES[r.q.t]) ? TOPIC_NAMES[r.q.t] : '';
+    var status = r.selText === null
+      ? 'Нет ответа'
+      : (r.ok ? 'Верный ответ' : ('Ваш ответ: ' + r.selText + ' → правильно: ' + (r.correctText || '')));
+    var comment = (r.q && r.q.c) ? ('<br><small style="color:#c9d1ee">💬 ' + r.q.c + '</small>') : '';
+    d.innerHTML = '<div class="ic">' + (r.ok ? '✔' : '✘') + '</div>' +
+      '<div><b>Вопрос ' + (i + 1) + '.</b> ' + qText + '<br>' +
+      '<small>Раздел ' + (r.q ? r.q.t : '') + '. ' + topicName + ' · ' + status + '</small>' +
+      comment + '</div>';
+    rows.appendChild(d);
+  });
+
+  $('r-retry').onclick = function(){
+    startQuiz(shuffle(s.qs.map(function(q){ return Object.assign({}, q); })), s.title, s.timed);
+  };
+  window.scrollTo(0, 0);
 }
 
 function startMissed(){
