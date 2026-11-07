@@ -179,7 +179,7 @@ function finish(){
     s.results.push({q:q,ok:false,selText:null,correctText:q.o[q.a]});recordAnswer(q,false);}
   HISTORY.unshift({d:new Date().toLocaleString('ru-RU'),title:s.title,score:s.score,total:s.qs.length});
   if(HISTORY.length>30)HISTORY.length=30;saveAll();
-  $('screen-quiz').classList.add('hidden');$('screen-result').classList.remove('hidden');
+  show('screen-result');
   var n=s.qs.length;$('r-score').textContent=s.score+' / '+n;
   var v=$('r-verdict');
   if(n===14){v.textContent=s.score>=12?'СДАНО ✔':'НЕ СДАНО ✘';v.className='verdict '+(s.score>=12?'pass':'fail');
