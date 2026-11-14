@@ -14,8 +14,22 @@ const LS = {
 let STATS   = LS.get('plat_stats',{});
 let MISSED  = LS.get('plat_missed',[]);
 let HISTORY = LS.get('plat_history',[]);
-let SETTINGS= LS.get('plat_settings',{shuffle:true});
+let SETTINGS= LS.get('plat_settings',{shuffle:false,theme:'dark'});
+if(typeof SETTINGS.shuffle==='undefined')SETTINGS.shuffle=false;
+if(!SETTINGS.theme)SETTINGS.theme='dark';
 function saveAll(){LS.set('plat_stats',STATS);LS.set('plat_missed',MISSED);LS.set('plat_history',HISTORY);LS.set('plat_settings',SETTINGS);}
+function applyTheme(){
+  var t=SETTINGS.theme==='light'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  var btn=$('theme-btn');
+  if(btn)btn.textContent=t==='light'?'☀️ Светлая':'🌙 Тёмная';
+}
+function toggleTheme(){
+  SETTINGS.theme=SETTINGS.theme==='light'?'dark':'light';
+  saveAll();
+  applyTheme();
+}
+
 
 var QB=[], TOPICS=[], session=null, timerInt=null;
 
@@ -262,10 +276,29 @@ function finish(){
   window.scrollTo(0, 0);
 }
 
+function missedByTopic(tid){
+  return missedQuestions().filter(function(q){return q.t===String(tid);});
+}
+function startMissedAll(){
+  var qs=missedQuestions();
+  if(!qs.length){alert('Ошибок пока нет.');return;}
+  startQuiz(shuffle(qs.map(function(q){return Object.assign({},q);})),'Ошибки: все разделы ('+qs.length+')',false);
+}
+function startMissedTopic(tid){
+  var qs=missedByTopic(tid);
+  if(!qs.length){alert('В этом разделе ошибок нет.');return;}
+  var name=(TOPIC_NAMES[String(tid)]||('Раздел '+tid));
+  startQuiz(shuffle(qs.map(function(q){return Object.assign({},q);})),'Ошибки: '+tid+'. '+name+' ('+qs.length+')',false);
+}
 function startMissed(){
   var qs=missedQuestions();
   if(!qs.length){alert('Ошибок пока нет. Отвечайте на вопросы — неверно решённые появятся здесь.');return;}
-  startQuiz(shuffle(qs.map(function(q){return Object.assign({},q);})),'Работа над ошибками ('+qs.length+')',false);
+  // show chooser on home
+  var box=$('missed-chooser');
+  if(!box){buildHome();box=$('missed-chooser');}
+  if(!box){startMissedAll();return;}
+  box.classList.remove('hidden');
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 var _searchFound=[];
@@ -316,7 +349,10 @@ function buildHome(){
      '<div class="card exam-card" onclick="startSim()"><div class="num">⏱</div><div><b>Случайный билет: 14 вопросов</b><span>По одному из каждого раздела · 30 минут · порог 12/14</span></div></div>'+
      '<div class="card" onclick="startMissed()"><div class="num">🔁</div><div><b>Только ошибки</b><span id="missed-count"></span></div></div>'+
    '</div>'+
-   '<div style="margin:14px 0"><label class="toggle"><input type="checkbox" id="shuffle-toggle">Перемешивать варианты ответов</label></div>'+
+   '<div id="missed-chooser" class="missed-panel hidden"></div>'+
+   '<div style="margin:14px 0;display:flex;flex-wrap:wrap;gap:16px;align-items:center">'+
+     '<label class="toggle"><input type="checkbox" id="shuffle-toggle">Перемешивать варианты ответов</label>'+
+   '</div>'+
    '<h2 class="sec">🔍 Поиск по вопросам</h2>'+
    '<div class="searchbox"><input id="search-input" type="text" placeholder="Ключевое слово, например: динамический список, XDTO, регистр"><button class="btn" id="search-btn">Найти</button></div>'+
    '<div id="search-results"></div>'+
@@ -337,6 +373,26 @@ function buildHome(){
     tg.appendChild(d);});
   $('missed-count').textContent=MISSED.length?MISSED.length+' вопрос(ов) к повтору':'Ошибок пока нет';
   var stgl=$('shuffle-toggle');stgl.checked=!!SETTINGS.shuffle;stgl.onchange=function(){SETTINGS.shuffle=stgl.checked;saveAll();};
+  // chooser for errors by section
+  var ch=$('missed-chooser');
+  if(ch){
+    if(!MISSED.length){ch.classList.add('hidden');ch.innerHTML='';}
+    else{
+      var byT={};
+      missedQuestions().forEach(function(q){byT[q.t]=(byT[q.t]||0)+1;});
+      var html='<h3>Отработка ошибок</h3>'+
+        '<button class="btn" onclick="startMissedAll()">Все ошибки ('+MISSED.length+')</button>'+
+        '<div class="grid" style="margin-top:12px">';
+      TOPICS.forEach(function(t){
+        var c=byT[t.id]||0;
+        if(!c)return;
+        html+='<div class="card" onclick="startMissedTopic(\''+t.id+'\')"><div class="num">'+t.id+'</div><div><b>'+t.title+'</b><span>'+c+' ошибк(и/ок)</span></div></div>';
+      });
+      html+='</div>';
+      ch.innerHTML=html;
+    }
+  }
+  applyTheme();
   $('search-btn').onclick=doSearch;$('search-input').onkeydown=function(e){if(e.key==='Enter')doSearch();};
   renderOverall();renderTopicStats();renderHistory();
   $('bank-size').textContent='В банке: '+QB.length+' вопросов';
@@ -344,6 +400,7 @@ function buildHome(){
 
 // init
 if(loadData()){
+  applyTheme();
   buildHome();
 } else {
   // error already shown

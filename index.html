@@ -5,10 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Тренажёр «1С:Профессионал» — Платформа 8.3</title>
 <style>
-:root{
+:root, [data-theme="dark"]{
   --bg:#0f1220;--panel:#1a1f35;--panel2:#242a45;--line:#2e3556;
   --text:#e8ecff;--muted:#9aa3c7;--yellow:#ffd84d;--green:#3ecf7a;
-  --red:#ff6161;--blue:#6aa7ff;
+  --red:#ff6161;--blue:#6aa7ff;--exam1:#1e2545;--exam2:#2a3260;
+  --img-bg:#fff;
+}
+[data-theme="light"]{
+  --bg:#f4f6fb;--panel:#ffffff;--panel2:#e8ecf4;--line:#d0d7e8;
+  --text:#1a1f35;--muted:#5a657a;--yellow:#c99200;--green:#1a9e4a;
+  --red:#d43838;--blue:#2b6fd6;--exam1:#eef2ff;--exam2:#e0e7ff;
+  --img-bg:#fff;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;
@@ -29,7 +36,7 @@ header small{color:var(--muted);display:block;font-size:13px}
 .card .num{font-size:26px;font-weight:800;color:var(--yellow);min-width:40px}
 .card b{display:block;font-size:15px}
 .card span{color:var(--muted);font-size:12.5px;display:block;margin-top:2px}
-.exam-card{background:linear-gradient(135deg,#1e2545,#2a3260)}
+.exam-card{background:linear-gradient(135deg,var(--exam1),var(--exam2))}
 .btn{background:var(--yellow);color:#1a1a1a;border:none;border-radius:10px;
   padding:10px 18px;font-weight:700;cursor:pointer;font-size:14px}
 .btn:hover{filter:brightness(1.08)}
@@ -94,6 +101,12 @@ header small{color:var(--muted);display:block;font-size:13px}
 .card.stat:hover{transform:none;border-color:var(--line)}
 .card.stat span{font-size:12px;color:var(--muted)}
 .card.stat b{font-size:22px}
+.theme-btn{margin-left:auto;background:var(--panel2);border:1px solid var(--line);
+  color:var(--text);border-radius:10px;padding:8px 12px;cursor:pointer;font-size:13px;font-weight:600}
+.theme-btn:hover{border-color:var(--yellow)}
+.missed-panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+.missed-panel h3{margin:0 0 10px;font-size:15px}
+.missed-panel .grid{margin-top:10px}
 footer{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);
   color:var(--muted);font-size:12.5px}
 /* lightbox */
@@ -115,6 +128,7 @@ footer{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);
       <h1>Тренажёр «1С:Профессионал»</h1>
       <small>Платформа 1С:Предприятие 8.3 · <span id="bank-size">загрузка…</span></small>
     </div>
+    <button type="button" class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Сменить тему">🌙 Тёмная</button>
   </header>
 
   <div id="screen-home" class="screen active"></div>
@@ -159,7 +173,7 @@ footer{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);
 
 <div id="lightbox" onclick="this.classList.remove('active')"><img id="lightbox-img" src="" alt=""></div>
 
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script src="data.js?v=20261114"></script>
+<script src="app.js?v=20261114"></script>
 </body>
 </html>
